@@ -1,0 +1,12 @@
+{
+  "name":"找車雷達",
+  "short_name":"找車雷達",
+  "description":"在本機記住機車停車位置，使用指南針協助找車。",
+  "start_url":"./",
+  "scope":"./",
+  "display":"standalone",
+  "orientation":"portrait",
+  "background_color":"#101713",
+  "theme_color":"#101713",
+  "icons":[{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
