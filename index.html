@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101713"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="找車雷達">
-<title>找車雷達</title><link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icon.svg"><link rel="stylesheet" href="./styles.css">
+<title>找車雷達</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><link rel="manifest" href="./manifest.webmanifest"><link rel="apple-touch-icon" href="./icon.svg"><link rel="stylesheet" href="./styles.css">
 </head>
 <body><main class="app">
 <header><div class="logo">⌖</div><div class="heading"><small>PARKING COMPASS</small><h1>找車雷達</h1></div><button id="settings" class="dots" aria-label="設定">⋯</button></header>
 <section class="status"><div><i id="dot"></i><b id="status">尚未取得目前位置</b></div><p id="savedMeta">還沒有儲存車位</p></section>
+<button id="openMap" class="open-map" type="button"><span>地圖</span><b>開啟真實地圖 ↗</b><small>定位後查看周圍道路，也能修改停車位置</small></button>
 <section class="compass-card"><div class="dial">
 <div class="ring outer"></div><div class="ring inner"></div><div class="ticks"></div>
 <span class="north">N</span><span class="east">E</span><span class="south">S</span><span class="west">W</span>
@@ -20,4 +21,4 @@
 <dialog id="settingsDialog"><div class="dialog-head"><h2>定位與指南針</h2><button id="close" aria-label="關閉">×</button></div><p>每次開啟網頁都會詢問是否啟用指南針。iPhone 需要你點按按鈕來啟用方向感測器。</p><button id="orientation" class="primary wide">啟用方向感測器</button><button id="refresh" class="secondary wide">重新取得目前位置</button><p class="hint">室內、地下室與金屬車棚可能影響 GPS 或指南針。請以真機測試方向。</p></dialog>
 <dialog id="launchCompassDialog" class="confirm-dialog"><div class="confirm-symbol">🧭</div><h2>要啟用指南針嗎？</h2><p>啟用方向感測器後，找車雷達才能依照手機朝向轉動箭頭。每次開啟都會詢問一次。</p><div class="confirm-actions"><button id="compassLater" class="secondary">稍後再說</button><button id="compassEnable" class="primary">啟用指南針</button></div></dialog>
 <dialog id="saveConfirmDialog" class="confirm-dialog"><div class="confirm-symbol">⌖</div><h2>記住這個車位？</h2><p>將目前 GPS 位置儲存為你的停車位置，之後可以用指南針找回來。</p><div class="confirm-actions"><button id="saveCancel" class="secondary">取消</button><button id="saveConfirm" class="primary">確認記住</button></div></dialog>
-<div id="toast" role="status"></div><script src="./app.js"></script></body></html>
+<dialog id="mapDialog" class="map-dialog"><div class="map-head"><button id="mapBack" class="map-back" aria-label="返回">‹</button><div><h2>找車地圖</h2><p id="mapHint">點擊地圖可選擇新的車位</p></div><button id="mapLocate" class="map-locate" aria-label="回到目前位置">◎</button></div><div class="map-compass"><div class="mini-dial"><span>N</span><div id="miniNeedle" class="mini-needle"></div></div><div class="map-compass-info"><small>目前方向 · 車位距離</small><b id="mapBearing">等待定位</b><span id="mapDistance">尚未取得位置</span></div></div><div id="realMap" aria-label="真實道路地圖"></div><div class="map-bottom"><p id="selectedCoords">點擊地圖選擇停車位置</p><button id="useMapPoint" class="primary wide" disabled>將車位改到選取位置</button><button id="mapCancel" class="secondary wide">返回，不更改</button></div></dialog><div id="toast" role="status"></div><script src="./app.js"></script></body></html>
