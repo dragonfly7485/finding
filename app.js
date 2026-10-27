@@ -1,0 +1,37 @@
+const $=id=>document.getElementById(id),KEY="find-my-bike-location-v1";
+let current=null,saved=null,heading=null,watchId=null,toastTimer,orientationListening=false;
+try{saved=JSON.parse(localStorage.getItem(KEY));}catch{}
+function toast(s){const e=$("toast");e.textContent=s;e.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove("show"),2800)}
+function status(s,good=false){$("status").textContent=s;$("dot").classList.toggle("good",good)}
+function fmtTime(t){return new Date(t).toLocaleString("zh-TW",{month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false})}
+function coords(p){return p.lat.toFixed(6)+", "+p.lon.toFixed(6)}
+function dist(a,b){const R=6371000,r=x=>x*Math.PI/180,dl=r(b.lat-a.lat),dn=r(b.lon-a.lon),x=Math.sin(dl/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+function bearingTo(a,b){const r=x=>x*Math.PI/180,d=x=>(x*180/Math.PI+360)%360,p1=r(a.lat),p2=r(b.lat),dl=r(b.lon-a.lon);return d(Math.atan2(Math.sin(dl)*Math.cos(p2),Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl)))}
+function direction(n){return ["北","東北","東","東南","南","西南","西","西北"][Math.round(n/45)%8]}
+function saveCurrentPosition(){if(!current){toast("正在取得位置，請稍候再按一次");locate();return}saved={...current,timestamp:Date.now()};try{localStorage.setItem(KEY,JSON.stringify(saved))}catch{toast("無法儲存，請檢查瀏覽器儲存空間");return}renderSaved();renderNav();toast("車位已儲存到這台裝置")}
+function renderSaved(){if(!saved){$("savedMeta").textContent="還沒有儲存車位";$("time").textContent="--";$("coords").textContent="--";$("badge").textContent="未儲存";$("badge").classList.remove("active");$("map").disabled=true;return}$("savedMeta").textContent="上次停車："+fmtTime(saved.timestamp);$("time").textContent=fmtTime(saved.timestamp);$("coords").textContent=coords(saved);$("badge").textContent="已儲存";$("badge").classList.add("active");$("map").disabled=false}
+function renderNav(){if(!current)return;$("accuracy").textContent="約 ±"+Math.round(current.accuracy)+" 公尺";if(!saved){$("distance").textContent="--";$("unit").textContent="尚未存車";$("bearing").textContent="先記住車位";return}const m=dist(current,saved),b=bearingTo(current,saved);$("distance").textContent=m<1000?Math.round(m):(m/1000).toFixed(2);$("unit").textContent=m<1000?"公尺":"公里";$("bearing").textContent=direction(b)+" · "+Math.round(b)+"°"+(heading===null?" · 請啟用指南針":"");$("needle").style.transform="translate(-50%,-50%) rotate("+(heading===null?0:((b-heading+360)%360))+"deg)";if(m<8&&current.accuracy<35)status("已接近記錄位置，請留意周圍車位",true)}
+function onPosition(p){current={lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy};status("目前位置已更新",true);renderNav()}
+function onError(e){const m=e.code===1?"定位權限未開啟，請允許位置存取":e.code===2?"無法取得位置，請移至較開闊處":"定位逾時，請再試一次";status(m);toast(m)}
+function locate(){if(!navigator.geolocation){toast("瀏覽器不支援定位");return}status("正在取得 GPS 位置…");navigator.geolocation.getCurrentPosition(onPosition,onError,{enableHighAccuracy:true,timeout:20000,maximumAge:0})}
+function watch(){if(!navigator.geolocation)return;if(watchId!==null)navigator.geolocation.clearWatch(watchId);watchId=navigator.geolocation.watchPosition(onPosition,onError,{enableHighAccuracy:true,maximumAge:1000,timeout:20000})}
+$("save").onclick=()=>{if(!current){toast("正在取得位置，請稍候再按一次");locate();return}$("saveConfirmDialog").showModal()};
+$("saveCancel").onclick=()=>$("saveConfirmDialog").close();
+$("saveConfirm").onclick=()=>{$("saveConfirmDialog").close();saveCurrentPosition()};
+$("find").onclick=()=>{if(!saved){toast("請先按「記住車位」");return}watch();locate();toast("找車模式已啟動")};
+$("settings").onclick=()=>$("settingsDialog").showModal();
+$("close").onclick=()=>$("settingsDialog").close();
+$("refresh").onclick=()=>{locate();watch()};
+function onOrientation(e){let h=typeof e.webkitCompassHeading==="number"?e.webkitCompassHeading:typeof e.alpha==="number"?(360-e.alpha+360)%360:null;if(h!==null){heading=h;$("sensor").textContent="方向感測器已啟用";renderNav()}}
+function listenOrientation(){if(orientationListening)return;window.addEventListener("deviceorientation",onOrientation,true);window.addEventListener("deviceorientationabsolute",onOrientation,true);orientationListening=true}
+async function enableCompass(){try{if(typeof DeviceOrientationEvent==="undefined"){toast("此瀏覽器不支援方向感測器");return}if(typeof DeviceOrientationEvent.requestPermission==="function"){const p=await DeviceOrientationEvent.requestPermission();if(p!=="granted"){toast("尚未允許方向感測器");$("sensor").textContent="方向感測器未授權";return}}listenOrientation();$("sensor").textContent="正在等待方向資料…";toast("指南針已啟用")}catch{$("sensor").textContent="方向感測器未啟用";toast("無法啟用，請確認 Safari 權限")}}
+$("orientation").onclick=enableCompass;
+$("compassEnable").onclick=async()=>{$("launchCompassDialog").close();await enableCompass()};
+$("compassLater").onclick=()=>{$("launchCompassDialog").close();$("sensor").textContent="本次未啟用指南針"};
+$("map").onclick=()=>{if(!saved)return;window.location.href="maps://?ll="+saved.lat+","+saved.lon+"&q="+encodeURIComponent("我的機車");status("正在開啟 Apple 地圖…")};
+function resumeApp(){renderSaved();locate();if(saved)watch()}
+renderSaved();if(saved)$("unit").textContent="等待目前位置";if(window.isSecureContext)locate();else status("請使用 HTTPS 網址開啟才能定位");
+if("serviceWorker"in navigator&&location.protocol.startsWith("http"))addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")resumeApp()});
+window.addEventListener("pageshow",()=>{renderSaved();if(document.visibilityState==="visible")locate()});
+window.addEventListener("load",()=>{if(!$("launchCompassDialog").open)$("launchCompassDialog").showModal()});
