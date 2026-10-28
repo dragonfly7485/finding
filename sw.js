@@ -1,4 +1,4 @@
-const CACHE="find-my-bike-v9";
+const CACHE="find-my-bike-v10";
 const FILES=["./","./index.html","./styles.css","./app.js","./manifest.webmanifest","./icon.svg"];
 self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting())));
 self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith("find-my-bike-")&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
